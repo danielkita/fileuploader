@@ -1,65 +1,54 @@
+import express from 'express';
+import crypto from 'crypto';
+import multer from 'multer';
+import fs from 'fs';
+import cors from 'cors';
 
-const handleCors = () => {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-};
+const app = express();
+const upload = multer({ dest: 'uploads/' });
 
-const server = Bun.serve({
-  port: process.env.PORT || 3456,
-  async fetch(req, res) {
-    const url = new URL(req.url);
+app.use(cors());
 
-    if (req.method === "OPTIONS") {
-      return new Response(null, {
-        headers: handleCors(),
-      });
-    }
+app.options('*', cors());
 
-    if (req.method === "POST") {
-      try {
-        const file = await req.formData();
-        const data = file.get("file") as Blob;
-        const id = crypto.randomUUID();
-
-        await Bun.write(`upload/${id}`, data);
-
-        return Response.json(
-          {
-            url: `${url.origin}/upload/${id}`,
-          },
-          {
-            headers: handleCors(),
-          }
-        );
-      } catch (err) {
-        console.log(err);
-        return new Response(`Error uploading file`, { status: 500 });
-      }
-    }
-    if (req.method === "GET") {
-      if (url.pathname === "/") {
-        return new Response(`file uploader`);
-      }
-      const id = url.pathname.split("/").pop();
-      const file = Bun.file(`upload/${id}`);
-      if (!file.size) {
-        return new Response(`File not found`, { status: 404 });
-      }
-
-      const response = await file.stream();
-
-      setTimeout(() => {
-        // one time download - delete file after 5 seconds
-        Bun.write(`upload/${id}`, "");
-      }, 5000);
-
-      return new Response(response);
-    }
-    return new Response(`hey!`);
-  },
+app.get('/', (req, res) => {
+    res.send('HEY!');
 });
 
-console.log(`Listening on http://localhost:${server.port}...`);
+app.post('/', upload.single('file'), async (req, res) => {
+  try {
+    const id = crypto.randomBytes(16).toString("hex");
+
+    fs.renameSync(req.file!.path, `uploads/${id}`);
+
+    res.json({
+      url: `${req.protocol}://${req.get('host')}/uploads/${id}`
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error uploading file');
+  }
+});
+
+app.get('/uploads/:id', async (req, res) => {
+  const file = `uploads/${req.params.id}`;
+
+  if (!fs.existsSync(file)){
+    return res.status(404).send('File not found');
+  }
+
+  res.download(file, err => {
+    if(err) {
+      console.error(err);
+    } else {
+      setTimeout(() => {
+      fs.unlinkSync(file);
+      }, 5000);
+    }
+  });
+});
+
+app.listen(process.env.PORT || 3456, () =>{
+  console.log(`Listening on http://localhost:${process.env.PORT || 3456}...`)
+});
