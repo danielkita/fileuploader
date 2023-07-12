@@ -2,7 +2,6 @@ const server = Bun.serve({
   port: process.env.PORT || 3456,
   async fetch(req) {
     const url = new URL(req.url);
-    console.log(url);    
     if (req.method === "POST") {
       try {
         const file = await req.formData();
