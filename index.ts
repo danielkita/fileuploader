@@ -22,10 +22,9 @@ const server = Bun.serve({
       try {
         const file = await req.formData();
         const data = file.get("file") as Blob;
-        const buffer = Buffer.from(await data.arrayBuffer());
         const id = crypto.randomUUID();
 
-        await Bun.write(`upload/${id}`, buffer);
+        await Bun.write(`upload/${id}`, data);
 
         return Response.json(
           {
@@ -37,6 +36,7 @@ const server = Bun.serve({
         );
       } catch (err) {
         console.log(err);
+        return new Response(`Error uploading file`, { status: 500 });
       }
     }
     if (req.method === "GET") {
