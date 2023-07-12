@@ -32,7 +32,8 @@ app.post('/', upload.single('file'), async (req, res) => {
 });
 
 app.get('/uploads/:id', async (req, res) => {
-  const file = `uploads/${req.params.id}`;
+  const id = req.params.id.split('.')[0]; // ignore file extension
+  const file = `uploads/${id}`;
 
   if (!fs.existsSync(file)){
     return res.status(404).send('File not found');
