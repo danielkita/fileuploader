@@ -2,9 +2,8 @@ const server = Bun.serve({
   port: process.env.PORT || 3456,
   async fetch(req) {
     const url = new URL(req.url);
-    // handle POST REQUEST
+    console.log(url);    
     if (req.method === "POST") {
-      // save file to disk
       try {
         const file = await req.formData();
         const data = file.get("file") as Blob;
@@ -13,7 +12,9 @@ const server = Bun.serve({
 
         await Bun.write(`upload/${id}`, buffer);
 
-        return new Response(`/upload/${id}`);
+        return Response.json({
+            url: `${url.origin}/upload/${id}`
+        });
       } catch (err) {
         console.log(err);
       }
