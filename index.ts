@@ -22,7 +22,7 @@ app.post('/', upload.single('file'), async (req, res) => {
     fs.renameSync(req.file!.path, `uploads/${id}`);
 
     res.json({
-      url: `${req.protocol}://${req.get('host')}/uploads/${id}`
+      url: `https://${req.get('host')}/uploads/${id}`
     });
 
   } catch (err) {
