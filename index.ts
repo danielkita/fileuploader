@@ -1,55 +1,54 @@
-import express from 'express';
-import crypto from 'crypto';
-import multer from 'multer';
-import fs from 'fs';
-import cors from 'cors';
+import express from "express";
+import multer from "multer";
+import fs from "fs";
+import cors from "cors";
+import mime from "mime";
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
 app.use(cors());
 
-app.options('*', cors());
+app.options("*", cors());
 
-app.get('/', (req, res) => {
-    res.send('HEY!');
+app.get("/", (req, res) => {
+  res.send("HEY!");
 });
 
-app.post('/', upload.single('file'), async (req, res) => {
+app.post("/", upload.single("file"), async (req, res) => {
   try {
-    const id = crypto.randomBytes(16).toString("hex");
-
-    fs.renameSync(req.file!.path, `uploads/${id}`);
+    const id = req.file?.filename;
 
     res.json({
-      url: `https://${req.get('host')}/uploads/${id}`
+      url: `https://${req.get("host")}/uploads/${id}`,
     });
-
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error uploading file');
+    res.status(500).send("Error uploading file");
   }
 });
 
-app.get('/uploads/:id', async (req, res) => {
-  const id = req.params.id.split('.')[0]; // ignore file extension
+app.get("/uploads/:id", async (req, res) => {
+  const id = req.params.id.split(".")[0]; // ignore file extension
   const file = `uploads/${id}`;
 
-  if (!fs.existsSync(file)){
-    return res.status(404).send('File not found');
+  if (!fs.existsSync(file)) {
+    return res.status(404).send("File not found");
   }
 
-  res.download(file, err => {
-    if(err) {
+  res.contentType(req.params.id);
+
+  res.download(file, (err) => {
+    if (err) {
       console.error(err);
     } else {
       setTimeout(() => {
-      fs.unlinkSync(file);
+        fs.unlinkSync(file);
       }, 5000);
     }
   });
 });
 
-app.listen(process.env.PORT || 3456, () =>{
-  console.log(`Listening on http://localhost:${process.env.PORT || 3456}...`)
+app.listen(process.env.PORT || 3456, () => {
+  console.log(`Listening on http://localhost:${process.env.PORT || 3456}...`);
 });
