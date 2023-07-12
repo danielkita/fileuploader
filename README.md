@@ -2,6 +2,22 @@
 
 This is a simple file uploader application that allows you to upload files via an API. Once a file is uploaded, it will return a unique URL where the file can be downloaded. The file will be automatically deleted after 5 seconds from the first download attempt.
 
+## Running the Application
+
+Make sure you are in the root directory of the project on your terminal.
+
+This application uses [Bun](https://github.com/oven-sh/bun) as the runtime. If you don't have Bun installed on your machine, you'll have to install it first.
+
+After installing Bun, you can run the application using the following command:
+
+```shell
+❯ bun run index.ts
+```
+
+This command triggers Bun to execute the `index.ts` script, which is the main entry point to our application.
+
+Once you've initiated the command, the application should start. Monitor the console logs for any potential errors or a confirmation that the server has started successfully.
+
 ## API Method
 
 There is one main API method:
