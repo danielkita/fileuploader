@@ -1,7 +1,23 @@
+
+const handleCors = () => {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+};
+
 const server = Bun.serve({
   port: process.env.PORT || 3456,
-  async fetch(req) {
+  async fetch(req, res) {
     const url = new URL(req.url);
+
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        headers: handleCors(),
+      });
+    }
+
     if (req.method === "POST") {
       try {
         const file = await req.formData();
@@ -11,9 +27,14 @@ const server = Bun.serve({
 
         await Bun.write(`upload/${id}`, buffer);
 
-        return Response.json({
-            url: `${url.origin}/upload/${id}`
-        });
+        return Response.json(
+          {
+            url: `${url.origin}/upload/${id}`,
+          },
+          {
+            headers: handleCors(),
+          }
+        );
       } catch (err) {
         console.log(err);
       }
@@ -27,7 +48,7 @@ const server = Bun.serve({
       if (!file.size) {
         return new Response(`File not found`, { status: 404 });
       }
-      
+
       const response = await file.stream();
 
       setTimeout(() => {
